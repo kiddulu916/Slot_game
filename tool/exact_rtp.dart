@@ -27,23 +27,33 @@ void main() {
 
   print('Share of stake by symbol');
   final List<GameSymbol> symbols = report.stakeShareBySymbol.keys.toList()
-    ..sort((GameSymbol a, GameSymbol b) => report.stakeShareBySymbol[b]!
-        .compareTo(report.stakeShareBySymbol[a]!));
+    ..sort(
+      (GameSymbol a, GameSymbol b) => report.stakeShareBySymbol[b]!.compareTo(
+        report.stakeShareBySymbol[a]!,
+      ),
+    );
   for (final GameSymbol symbol in symbols) {
     final double rate = report.lineRateBySymbol[symbol]!;
-    print('  ${symbol.displayName.padRight(12)}'
-        '${pct(report.stakeShareBySymbol[symbol]!).padLeft(8)}'
-        '   1 line in ${(1 / rate).toStringAsFixed(0)}');
+    print(
+      '  ${symbol.displayName.padRight(12)}'
+      '${pct(report.stakeShareBySymbol[symbol]!).padLeft(8)}'
+      '   1 line in ${(1 / rate).toStringAsFixed(0)}',
+    );
   }
   print('  ${'Scatter'.padRight(12)}${pct(report.scatterRtp).padLeft(8)}');
   print('');
 
   print('Share of stake by combination');
   final List<String> combos = report.stakeShareByCombination.keys.toList()
-    ..sort((String a, String b) => report.stakeShareByCombination[b]!
-        .compareTo(report.stakeShareByCombination[a]!));
+    ..sort(
+      (String a, String b) => report.stakeShareByCombination[b]!.compareTo(
+        report.stakeShareByCombination[a]!,
+      ),
+    );
   for (final String combo in combos) {
-    print('  ${combo.padRight(18)}'
-        '${pct(report.stakeShareByCombination[combo]!).padLeft(8)}');
+    print(
+      '  ${combo.padRight(18)}'
+      '${pct(report.stakeShareByCombination[combo]!).padLeft(8)}',
+    );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'game_symbol.dart';
 import 'reel_strips.dart';
 
@@ -51,15 +53,15 @@ class Paytable {
   /// Scatters are absent on purpose — they pay off [scatterPays] instead.
   static const Map<GameSymbol, Map<int, int>> linePays =
       <GameSymbol, Map<int, int>>{
-    GameSymbol.cherry: <int, int>{3: 3, 4: 10, 5: 25},
-    GameSymbol.lemon: <int, int>{3: 5, 4: 15, 5: 40},
-    GameSymbol.grape: <int, int>{3: 5, 4: 15, 5: 40},
-    GameSymbol.bell: <int, int>{3: 8, 4: 25, 5: 100},
-    GameSymbol.horseshoe: <int, int>{3: 12, 4: 40, 5: 125},
-    GameSymbol.diamond: <int, int>{3: 15, 4: 50, 5: 200},
-    GameSymbol.seven: <int, int>{3: 60, 4: 250, 5: 1500},
-    GameSymbol.wild: <int, int>{3: 150, 4: 750, 5: 4000},
-  };
+        GameSymbol.cherry: <int, int>{3: 3, 4: 10, 5: 25},
+        GameSymbol.lemon: <int, int>{3: 5, 4: 15, 5: 40},
+        GameSymbol.grape: <int, int>{3: 5, 4: 15, 5: 40},
+        GameSymbol.bell: <int, int>{3: 8, 4: 25, 5: 100},
+        GameSymbol.bar: <int, int>{3: 12, 4: 40, 5: 125},
+        GameSymbol.diamond: <int, int>{3: 15, 4: 50, 5: 200},
+        GameSymbol.seven: <int, int>{3: 60, 4: 250, 5: 1500},
+        GameSymbol.wild: <int, int>{3: 150, 4: 750, 5: 4000},
+      };
 
   /// Scatter pays multiply the *total bet*, because they ignore paylines.
   static const Map<int, int> scatterPays = <int, int>{3: 6, 4: 30, 5: 250};
@@ -78,7 +80,7 @@ class Paytable {
     GameSymbol.wild,
     GameSymbol.seven,
     GameSymbol.diamond,
-    GameSymbol.horseshoe,
+    GameSymbol.bar,
     GameSymbol.bell,
     GameSymbol.grape,
     GameSymbol.lemon,
@@ -88,7 +90,19 @@ class Paytable {
   static int linePay(GameSymbol symbol, int count) =>
       linePays[symbol]?[count] ?? 0;
 
-  static int scatterPay(int count) => scatterPays[count] ?? 0;
+  /// The highest scatter count the tables price, currently one per reel.
+  static final int _topScatterTier = scatterPays.keys.reduce(max);
 
-  static int freeSpinsFor(int scatterCount) => freeSpinAwards[scatterCount] ?? 0;
+  /// Scatters are counted across the whole grid, and a 5x3 window can show
+  /// more than one per reel — up to [reelCount] * [rowCount] of them. Counts
+  /// above the top priced tier pay that tier rather than dropping to nothing,
+  /// so adding a second scatter to a band can never silently rob the player.
+  static int _cappedScatterCount(int count) =>
+      count < minMatch ? 0 : min(count, _topScatterTier);
+
+  static int scatterPay(int count) =>
+      scatterPays[_cappedScatterCount(count)] ?? 0;
+
+  static int freeSpinsFor(int scatterCount) =>
+      freeSpinAwards[_cappedScatterCount(scatterCount)] ?? 0;
 }

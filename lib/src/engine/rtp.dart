@@ -110,10 +110,16 @@ RtpReport computeExactRtp({List<List<GameSymbol>>? strips}) {
       final double share = probability * win.payout;
       expectedLinePayout += share;
       lineHitRate += probability;
-      shareBySymbol.update(win.symbol, (double v) => v + share,
-          ifAbsent: () => share);
-      rateBySymbol.update(win.symbol, (double v) => v + probability,
-          ifAbsent: () => probability);
+      shareBySymbol.update(
+        win.symbol,
+        (double v) => v + share,
+        ifAbsent: () => share,
+      );
+      rateBySymbol.update(
+        win.symbol,
+        (double v) => v + probability,
+        ifAbsent: () => probability,
+      );
       shareByCombination.update(
         '${win.symbol.displayName} x${win.matchCount}',
         (double v) => v + share,
@@ -144,8 +150,10 @@ RtpReport computeExactRtp({List<List<GameSymbol>>? strips}) {
       }
       perReel[scatters] += 1 / band.length;
     }
-    final List<double> merged =
-        List<double>.filled(scatterTotals.length + Paytable.rowCount, 0);
+    final List<double> merged = List<double>.filled(
+      scatterTotals.length + Paytable.rowCount,
+      0,
+    );
     for (int carried = 0; carried < scatterTotals.length; carried++) {
       if (scatterTotals[carried] == 0) {
         continue;
@@ -182,7 +190,8 @@ RtpReport computeExactRtp({List<List<GameSymbol>>? strips}) {
     stopCombinations: stopCombinations,
     stakeShareBySymbol: Map<GameSymbol, double>.unmodifiable(shareBySymbol),
     lineRateBySymbol: Map<GameSymbol, double>.unmodifiable(rateBySymbol),
-    stakeShareByCombination:
-        Map<String, double>.unmodifiable(shareByCombination),
+    stakeShareByCombination: Map<String, double>.unmodifiable(
+      shareByCombination,
+    ),
   );
 }

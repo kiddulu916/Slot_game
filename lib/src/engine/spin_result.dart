@@ -33,7 +33,8 @@ class LineWin {
   }
 
   @override
-  String toString() => 'LineWin(line $lineIndex, '
+  String toString() =>
+      'LineWin(line $lineIndex, '
       '${symbol.displayName} x$matchCount, $payout credits)';
 }
 
@@ -107,11 +108,12 @@ class SpinResult {
 
   /// Every cell that took part in a win, for highlighting.
   Set<({int reel, int row})> get winningCells => <({int reel, int row})>{
-        for (final LineWin win in lineWins) ...win.cells,
-        ...?scatterWin?.cells,
-      };
+    for (final LineWin win in lineWins) ...win.cells,
+    ...?scatterWin?.cells,
+  };
 
   @override
-  String toString() => 'SpinResult(stops: $stops, payout: $totalPayout, '
+  String toString() =>
+      'SpinResult(stops: $stops, payout: $totalPayout, '
       'lines: ${lineWins.length}, scatter: $scatterWin)';
 }

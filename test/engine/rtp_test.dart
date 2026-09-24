@@ -27,7 +27,8 @@ void main() {
       expect(
         report.effectiveRtp,
         closeTo(0.945, 0.01),
-        reason: 'the maths was tuned to this; re-run tool/exact_rtp.dart and '
+        reason:
+            'the maths was tuned to this; re-run tool/exact_rtp.dart and '
             'update the target deliberately if you meant to change it',
       );
     });
@@ -56,23 +57,29 @@ void main() {
     });
 
     test('triggers free spins occasionally, not constantly', () {
-      final double triggerRate = report.expectedFreeSpins /
-          Paytable.freeSpinsFor(Paytable.minMatch);
+      final double triggerRate =
+          report.expectedFreeSpins / Paytable.freeSpinsFor(Paytable.minMatch);
       expect(triggerRate, lessThan(0.02), reason: 'rarer than 1 spin in 50');
-      expect(triggerRate, greaterThan(0.002), reason: 'more often than 1 in 500');
+      expect(
+        triggerRate,
+        greaterThan(0.002),
+        reason: 'more often than 1 in 500',
+      );
     });
 
-    test('spreads its return across symbols instead of one carrying the game',
-        () {
-      for (final MapEntry<GameSymbol, double> entry
-          in report.stakeShareBySymbol.entries) {
-        expect(
-          entry.value / report.lineRtp,
-          lessThan(0.25),
-          reason: '${entry.key.displayName} carries too much of the return',
-        );
-      }
-    });
+    test(
+      'spreads its return across symbols instead of one carrying the game',
+      () {
+        for (final MapEntry<GameSymbol, double> entry
+            in report.stakeShareBySymbol.entries) {
+          expect(
+            entry.value / report.lineRtp,
+            lessThan(0.25),
+            reason: '${entry.key.displayName} carries too much of the return',
+          );
+        }
+      },
+    );
 
     test('keeps a jackpot worth chasing', () {
       final int topLinePay = Paytable.linePay(GameSymbol.wild, 5);

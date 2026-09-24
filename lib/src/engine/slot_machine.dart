@@ -11,14 +11,14 @@ import 'spin_result.dart';
 /// those stops expose. Nothing here looks at the player's balance, which keeps
 /// the maths honest and easy to simulate.
 class SlotMachine {
-  SlotMachine({
-    List<List<GameSymbol>>? strips,
-    Random? random,
-  })  : strips = strips ?? ReelStrips.standard,
-        _random = random ?? Random.secure() {
+  SlotMachine({List<List<GameSymbol>>? strips, Random? random})
+    : strips = strips ?? ReelStrips.standard,
+      _random = random ?? Random.secure() {
     if (this.strips.length != Paytable.reelCount) {
-      throw ArgumentError('Expected ${Paytable.reelCount} reel strips, '
-          'got ${this.strips.length}');
+      throw ArgumentError(
+        'Expected ${Paytable.reelCount} reel strips, '
+        'got ${this.strips.length}',
+      );
     }
     for (int reel = 0; reel < this.strips.length; reel++) {
       if (this.strips[reel].length < Paytable.rowCount) {
@@ -89,8 +89,10 @@ class SlotMachine {
   /// Bands are loops, so the window wraps past the end of a strip.
   List<List<GameSymbol>> windowAt(List<int> stops) {
     if (stops.length != strips.length) {
-      throw ArgumentError('Expected ${strips.length} stops, got '
-          '${stops.length}');
+      throw ArgumentError(
+        'Expected ${strips.length} stops, got '
+        '${stops.length}',
+      );
     }
     return List<List<GameSymbol>>.unmodifiable(<List<GameSymbol>>[
       for (int reel = 0; reel < strips.length; reel++)
@@ -203,7 +205,10 @@ class SlotMachine {
     }
     final int count = cells.length;
     final int payout =
-        Paytable.scatterPay(count) * betPerLine * Paytable.lineCount * multiplier;
+        Paytable.scatterPay(count) *
+        betPerLine *
+        Paytable.lineCount *
+        multiplier;
     final int freeSpins = Paytable.freeSpinsFor(count);
     if (payout == 0 && freeSpins == 0) {
       return null;

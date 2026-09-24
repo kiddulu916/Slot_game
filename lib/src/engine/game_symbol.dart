@@ -7,7 +7,7 @@ enum GameSymbol {
   lemon('Lemon'),
   grape('Grape'),
   bell('Bell'),
-  horseshoe('Horseshoe'),
+  bar('BAR'),
   diamond('Diamond'),
   seven('Lucky Seven'),
   wild('Wild'),

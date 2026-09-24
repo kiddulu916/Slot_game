@@ -17,7 +17,7 @@ import 'game_symbol.dart';
 /// | Lemon     | 5        | 16.7%             |
 /// | Grape     | 5        | 16.7%             |
 /// | Bell      | 4        | 13.3%             |
-/// | Horseshoe | 3        | 10.0%             |
+/// | BAR       | 3        | 10.0%             |
 /// | Diamond   | 3        | 10.0%             |
 /// | Wild      | 2        |  6.7%             |
 /// | Seven     | 1        |  3.3%             |
@@ -41,40 +41,40 @@ class ReelStrips {
   static const GameSymbol _l = GameSymbol.lemon;
   static const GameSymbol _g = GameSymbol.grape;
   static const GameSymbol _b = GameSymbol.bell;
-  static const GameSymbol _h = GameSymbol.horseshoe;
+  static const GameSymbol _br = GameSymbol.bar;
   static const GameSymbol _d = GameSymbol.diamond;
   static const GameSymbol _s7 = GameSymbol.seven;
   static const GameSymbol _w = GameSymbol.wild;
   static const GameSymbol _sc = GameSymbol.scatter;
 
   static const List<GameSymbol> _reel1 = <GameSymbol>[
-    _c, _l, _b, _g, _c, _d, _l, _h, _c, _w, //
-    _g, _l, _b, _c, _d, _g, _sc, _l, _h, _c, //
-    _b, _g, _s7, _l, _c, _d, _b, _g, _h, _w, //
+    _c, _l, _b, _g, _c, _d, _l, _br, _c, _w, //
+    _g, _l, _b, _c, _d, _g, _sc, _l, _br, _c, //
+    _b, _g, _s7, _l, _c, _d, _b, _g, _br, _w, //
   ];
 
   static const List<GameSymbol> _reel2 = <GameSymbol>[
-    _l, _c, _g, _b, _d, _c, _h, _l, _w, _g, //
-    _c, _s7, _b, _l, _g, _h, _c, _sc, _l, _b, //
-    _d, _g, _c, _h, _l, _b, _g, _d, _c, _w, //
+    _l, _c, _g, _b, _d, _c, _br, _l, _w, _g, //
+    _c, _s7, _b, _l, _g, _br, _c, _sc, _l, _b, //
+    _d, _g, _c, _br, _l, _b, _g, _d, _c, _w, //
   ];
 
   static const List<GameSymbol> _reel3 = <GameSymbol>[
-    _g, _c, _l, _h, _b, _w, _c, _g, _d, _l, //
-    _b, _c, _s7, _g, _h, _l, _c, _sc, _b, _g, //
-    _l, _d, _c, _h, _g, _b, _l, _c, _d, _w, //
+    _g, _c, _l, _br, _b, _w, _c, _g, _d, _l, //
+    _b, _c, _s7, _g, _br, _l, _c, _sc, _b, _g, //
+    _l, _d, _c, _br, _g, _b, _l, _c, _d, _w, //
   ];
 
   static const List<GameSymbol> _reel4 = <GameSymbol>[
-    _b, _l, _c, _g, _h, _l, _w, _c, _b, _d, //
-    _g, _l, _c, _s7, _h, _b, _g, _sc, _l, _c, //
-    _d, _b, _g, _h, _l, _c, _d, _g, _c, _w, //
+    _b, _l, _c, _g, _br, _l, _w, _c, _b, _d, //
+    _g, _l, _c, _s7, _br, _b, _g, _sc, _l, _c, //
+    _d, _b, _g, _br, _l, _c, _d, _g, _c, _w, //
   ];
 
   static const List<GameSymbol> _reel5 = <GameSymbol>[
-    _c, _g, _b, _l, _d, _c, _h, _g, _w, _b, //
-    _c, _l, _s7, _g, _b, _h, _c, _sc, _l, _g, //
-    _d, _c, _b, _h, _g, _l, _c, _d, _l, _w, //
+    _c, _g, _b, _l, _d, _c, _br, _g, _w, _b, //
+    _c, _l, _s7, _g, _b, _br, _c, _sc, _l, _g, //
+    _d, _c, _b, _br, _g, _l, _c, _d, _l, _w, //
   ];
 
   /// One band per reel, left to right.

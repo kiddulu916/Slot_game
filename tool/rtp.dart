@@ -43,15 +43,24 @@ void main(List<String> args) {
     }
     for (final LineWin win in result.lineWins) {
       hitsBySymbol.update(win.symbol, (int v) => v + 1, ifAbsent: () => 1);
-      paidBySymbol.update(win.symbol, (int v) => v + win.payout,
-          ifAbsent: () => win.payout);
+      paidBySymbol.update(
+        win.symbol,
+        (int v) => v + win.payout,
+        ifAbsent: () => win.payout,
+      );
     }
     final ScatterWin? scatter = result.scatterWin;
     if (scatter != null) {
-      hitsBySymbol.update(GameSymbol.scatter, (int v) => v + 1,
-          ifAbsent: () => 1);
-      paidBySymbol.update(GameSymbol.scatter, (int v) => v + scatter.payout,
-          ifAbsent: () => scatter.payout);
+      hitsBySymbol.update(
+        GameSymbol.scatter,
+        (int v) => v + 1,
+        ifAbsent: () => 1,
+      );
+      paidBySymbol.update(
+        GameSymbol.scatter,
+        (int v) => v + scatter.payout,
+        ifAbsent: () => scatter.payout,
+      );
       if (scatter.freeSpinsAwarded > 0) {
         scatterTriggers++;
         freeSpinsAwarded += scatter.freeSpinsAwarded;
@@ -74,21 +83,29 @@ void main(List<String> args) {
   print('Base game RTP:      ${pct(baseRtp)}');
   print('Effective RTP:      ${pct(effectiveRtp)}  (incl. free spins)');
   print('Hit frequency:      ${pct(paidSpins / spins)}');
-  print('Biggest win:        $biggestWin credits '
-      '(${(biggestWin / totalBet).toStringAsFixed(0)}x bet)');
-  print('Scatter triggers:   $scatterTriggers '
-      '(1 in ${(spins / max(scatterTriggers, 1)).toStringAsFixed(0)} spins)');
+  print(
+    'Biggest win:        $biggestWin credits '
+    '(${(biggestWin / totalBet).toStringAsFixed(0)}x bet)',
+  );
+  print(
+    'Scatter triggers:   $scatterTriggers '
+    '(1 in ${(spins / max(scatterTriggers, 1)).toStringAsFixed(0)} spins)',
+  );
   print('Free spins awarded: $freeSpinsAwarded');
   print('');
   print('Contribution by symbol');
   final List<GameSymbol> ordered = paidBySymbol.keys.toList()
-    ..sort((GameSymbol a, GameSymbol b) =>
-        paidBySymbol[b]!.compareTo(paidBySymbol[a]!));
+    ..sort(
+      (GameSymbol a, GameSymbol b) =>
+          paidBySymbol[b]!.compareTo(paidBySymbol[a]!),
+    );
   for (final GameSymbol symbol in ordered) {
     final int hits = hitsBySymbol[symbol] ?? 0;
     final double share = paidBySymbol[symbol]! / wagered;
-    print('  ${symbol.displayName.padRight(12)} '
-        '${pct(share).padLeft(7)} of stake   '
-        '1 in ${(spins / max(hits, 1)).toStringAsFixed(0)} spins');
+    print(
+      '  ${symbol.displayName.padRight(12)} '
+      '${pct(share).padLeft(7)} of stake   '
+      '1 in ${(spins / max(hits, 1)).toStringAsFixed(0)} spins',
+    );
   }
 }

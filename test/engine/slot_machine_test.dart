@@ -19,11 +19,11 @@ const GameSymbol scatter = GameSymbol.scatter;
 /// The padding is one symbol repeated, which cannot start a run of its own on
 /// any other payline, so a test grid only shows what the test put there.
 List<GameSymbol> bandShowing(List<GameSymbol> column) => <GameSymbol>[
-      ...column,
-      bell,
-      bell,
-      bell,
-    ];
+  ...column,
+  bell,
+  bell,
+  bell,
+];
 
 /// A grid that cannot pay on any payline.
 ///
@@ -63,10 +63,13 @@ SpinResult evaluateGrid(
 void main() {
   group('window', () {
     final SlotMachine machine = SlotMachine(
-      strips: List<List<GameSymbol>>.filled(
-        Paytable.reelCount,
-        <GameSymbol>[cherry, lemon, bell, seven, wild],
-      ),
+      strips: List<List<GameSymbol>>.filled(Paytable.reelCount, <GameSymbol>[
+        cherry,
+        lemon,
+        bell,
+        seven,
+        wild,
+      ]),
     );
 
     test('exposes three consecutive band symbols per reel', () {
@@ -91,8 +94,13 @@ void main() {
 
   group('line scoring', () {
     test('pays three of a kind from the leftmost reel', () {
-      final LineWin win =
-          scoreLine(<GameSymbol>[seven, seven, seven, bell, cherry])!;
+      final LineWin win = scoreLine(<GameSymbol>[
+        seven,
+        seven,
+        seven,
+        bell,
+        cherry,
+      ])!;
 
       expect(win.symbol, seven);
       expect(win.matchCount, 3);
@@ -107,7 +115,13 @@ void main() {
     });
 
     test('pays the full run when five match', () {
-      final LineWin win = scoreLine(<GameSymbol>[bell, bell, bell, bell, bell])!;
+      final LineWin win = scoreLine(<GameSymbol>[
+        bell,
+        bell,
+        bell,
+        bell,
+        bell,
+      ])!;
 
       expect(win.matchCount, 5);
       expect(win.payout, Paytable.linePay(bell, 5));
@@ -121,18 +135,26 @@ void main() {
     });
 
     test('scales with the line bet', () {
-      final LineWin win = scoreLine(
-        <GameSymbol>[seven, seven, seven, bell, cherry],
-        betPerLine: 25,
-      )!;
+      final LineWin win = scoreLine(<GameSymbol>[
+        seven,
+        seven,
+        seven,
+        bell,
+        cherry,
+      ], betPerLine: 25)!;
 
       expect(win.payout, Paytable.linePay(seven, 3) * 25);
     });
 
     test('reports the winning cells left to right', () {
       // Payline 0 is the centre row, so every cell sits on row 1.
-      final LineWin win =
-          scoreLine(<GameSymbol>[seven, seven, seven, bell, cherry])!;
+      final LineWin win = scoreLine(<GameSymbol>[
+        seven,
+        seven,
+        seven,
+        bell,
+        cherry,
+      ])!;
 
       expect(win.cells, <({int reel, int row})>[
         (reel: 0, row: 1),
@@ -161,7 +183,8 @@ void main() {
         expect(
           Paytable.linePay(byValue[i - 1], 5),
           greaterThanOrEqualTo(Paytable.linePay(byValue[i], 5)),
-          reason: '${byValue[i - 1].displayName} should rank above '
+          reason:
+              '${byValue[i - 1].displayName} should rank above '
               '${byValue[i].displayName}',
         );
       }
@@ -170,15 +193,26 @@ void main() {
 
   group('wilds', () {
     test('substitute to extend a run', () {
-      final LineWin win =
-          scoreLine(<GameSymbol>[seven, wild, seven, cherry, cherry])!;
+      final LineWin win = scoreLine(<GameSymbol>[
+        seven,
+        wild,
+        seven,
+        cherry,
+        cherry,
+      ])!;
 
       expect(win.symbol, seven);
       expect(win.matchCount, 3);
     });
 
     test('report the symbol they stood in for', () {
-      final LineWin win = scoreLine(<GameSymbol>[bell, bell, wild, wild, bell])!;
+      final LineWin win = scoreLine(<GameSymbol>[
+        bell,
+        bell,
+        wild,
+        wild,
+        bell,
+      ])!;
 
       expect(win.symbol, bell);
       expect(win.matchCount, 5);
@@ -191,8 +225,13 @@ void main() {
         greaterThan(Paytable.linePay(cherry, 5)),
         reason: 'test premise: three wilds must outrank five cherries',
       );
-      final LineWin win =
-          scoreLine(<GameSymbol>[wild, wild, wild, cherry, cherry])!;
+      final LineWin win = scoreLine(<GameSymbol>[
+        wild,
+        wild,
+        wild,
+        cherry,
+        cherry,
+      ])!;
 
       expect(win.symbol, wild);
       expect(win.payout, Paytable.linePay(wild, 3));
@@ -200,8 +239,13 @@ void main() {
 
     test('substitute when that beats paying as wilds', () {
       // Two wilds cannot pay on their own, so the seven run is taken instead.
-      final LineWin win =
-          scoreLine(<GameSymbol>[wild, wild, seven, seven, seven])!;
+      final LineWin win = scoreLine(<GameSymbol>[
+        wild,
+        wild,
+        seven,
+        seven,
+        seven,
+      ])!;
 
       expect(win.symbol, seven);
       expect(win.matchCount, 5);
@@ -209,7 +253,13 @@ void main() {
     });
 
     test('pay the top prize for five wilds', () {
-      final LineWin win = scoreLine(<GameSymbol>[wild, wild, wild, wild, wild])!;
+      final LineWin win = scoreLine(<GameSymbol>[
+        wild,
+        wild,
+        wild,
+        wild,
+        wild,
+      ])!;
 
       expect(win.symbol, wild);
       expect(win.payout, Paytable.linePay(wild, 5));
@@ -233,20 +283,17 @@ void main() {
   group('scatters', () {
     /// A grid with [count] scatters spread across separate reels and rows.
     SpinResult gridWithScatters(int count, {int betPerLine = 1}) {
-      return evaluateGrid(
-        <List<GameSymbol>>[
-          for (int reel = 0; reel < Paytable.reelCount; reel++)
-            <GameSymbol>[
-              for (int row = 0; row < Paytable.rowCount; row++)
-                // One scatter per reel while the budget lasts, on a rotating
-                // row so no payline collects more than one of them.
-                (reel < count && row == reel % Paytable.rowCount)
-                    ? scatter
-                    : (row.isEven ? cherry : grape),
-            ],
-        ],
-        betPerLine: betPerLine,
-      );
+      return evaluateGrid(<List<GameSymbol>>[
+        for (int reel = 0; reel < Paytable.reelCount; reel++)
+          <GameSymbol>[
+            for (int row = 0; row < Paytable.rowCount; row++)
+              // One scatter per reel while the budget lasts, on a rotating
+              // row so no payline collects more than one of them.
+              (reel < count && row == reel % Paytable.rowCount)
+                  ? scatter
+                  : (row.isEven ? cherry : grape),
+          ],
+      ], betPerLine: betPerLine);
     }
 
     test('do not carry a payline', () {
@@ -279,6 +326,27 @@ void main() {
       expect(result.freeSpinsAwarded, 0);
     });
 
+    test('pay their top tier when the grid shows more than five', () {
+      // A 5x3 window can hold up to fifteen scatters, but the table only prices
+      // three, four and five. Anything above that must still pay the top tier
+      // rather than dropping back to nothing.
+      final SpinResult flooded = evaluateGrid(
+        List<List<GameSymbol>>.filled(
+          Paytable.reelCount,
+          List<GameSymbol>.filled(Paytable.rowCount, scatter),
+        ),
+      );
+      final ScatterWin win = flooded.scatterWin!;
+
+      expect(win.count, Paytable.reelCount * Paytable.rowCount);
+      expect(
+        win.payout,
+        Paytable.scatterPay(Paytable.reelCount) * flooded.totalBet,
+      );
+      expect(win.freeSpinsAwarded, Paytable.freeSpinsFor(Paytable.reelCount));
+      expect(win.payout, greaterThan(0));
+    });
+
     test('pay more the more of them land', () {
       expect(
         gridWithScatters(4).scatterTotal,
@@ -301,8 +369,11 @@ void main() {
         <GameSymbol>[bell, grape, cherry],
       ];
       final SpinResult single = evaluateGrid(columns);
-      final SpinResult doubled =
-          evaluateGrid(columns, multiplier: 2, isFreeSpin: true);
+      final SpinResult doubled = evaluateGrid(
+        columns,
+        multiplier: 2,
+        isFreeSpin: true,
+      );
 
       expect(single.totalPayout, greaterThan(0));
       expect(doubled.totalPayout, single.totalPayout * 2);
@@ -343,8 +414,8 @@ void main() {
     });
 
     test('always reports a total bet across every payline', () {
-      final SpinResult result =
-          SlotMachine(random: Random(3)).spin(betPerLine: 5);
+      final SpinResult result = SlotMachine(random: Random(3))
+          .spin(betPerLine: 5);
 
       expect(result.totalBet, 5 * Paytable.lineCount);
       expect(result.grid, hasLength(Paytable.reelCount));
@@ -394,7 +465,10 @@ void main() {
       expect(result.totalPayout, result.lineWinTotal + result.scatterTotal);
       expect(result.isWin, isTrue);
       expect(result.winningCells, isNotEmpty);
-      expect(result.winMultiple, closeTo(result.totalPayout / result.totalBet, 1e-9));
+      expect(
+        result.winMultiple,
+        closeTo(result.totalPayout / result.totalBet, 1e-9),
+      );
     });
   });
 }
