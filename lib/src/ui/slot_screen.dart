@@ -26,10 +26,13 @@ class SlotScreen extends StatefulWidget {
 class _SlotScreenState extends State<SlotScreen>
     with SingleTickerProviderStateMixin {
   /// Drives the glow on every winning cell, shared so they breathe together.
+  ///
+  /// Only run while a win is on screen — a permanently repeating controller
+  /// would keep the whole cabinet rebuilding at 60fps for nothing.
   late final AnimationController _pulse = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 780),
-  )..repeat(reverse: true);
+  );
 
   int _lastCelebratedSpin = -1;
 
@@ -39,10 +42,20 @@ class _SlotScreenState extends State<SlotScreen>
     widget.game.addListener(_onGameChanged);
   }
 
-  /// Fires the haptic for a win once per spin, as the reels come to rest.
+  /// Runs the win pulse and fires the haptic once per spin, as the reels rest.
   void _onGameChanged() {
     final GameController game = widget.game;
     final SpinResult? result = game.result;
+
+    final bool showingWin =
+        result != null && result.isWin && game.phase != SpinPhase.spinning;
+    if (showingWin && !_pulse.isAnimating) {
+      _pulse.repeat(reverse: true);
+    } else if (!showingWin && _pulse.isAnimating) {
+      _pulse.stop();
+      _pulse.value = 0;
+    }
+
     if (result == null ||
         game.phase != SpinPhase.paying ||
         game.spinsPlayed == _lastCelebratedSpin) {
@@ -177,8 +190,10 @@ class _DisplayStrip extends StatelessWidget {
           Expanded(
             child: Readout(
               label: game.inFreeSpins ? 'FREE SPINS' : 'BET',
+              // During the bonus, how many are left out of how many were won —
+              // a retrigger visibly grows the total.
               value: game.inFreeSpins
-                  ? '${game.freeSpinsRemaining}'
+                  ? '${game.freeSpinsRemaining}/${game.freeSpinsWon}'
                   : '${game.totalBet}',
               accent: game.inFreeSpins ? AppTheme.mint : Colors.white,
             ),

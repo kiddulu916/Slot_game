@@ -286,6 +286,29 @@ void main() {
       });
     });
 
+    test('report how many were won alongside how many are left', () {
+      fakeAsync((FakeAsync async) {
+        final GameController game = loadedGame(
+          async: async,
+          machine: scattersThenCold(),
+        );
+        addTearDown(game.dispose);
+
+        game.spin();
+        settle(async);
+
+        expect(game.freeSpinsWon, game.freeSpinsRemaining);
+        final int won = game.freeSpinsWon;
+
+        game.spin();
+        settle(async);
+
+        // One spent, but the total won is unchanged without a retrigger.
+        expect(game.freeSpinsWon, won);
+        expect(game.freeSpinsRemaining, won - 1);
+      });
+    });
+
     test('keep the stake locked', () {
       fakeAsync((FakeAsync async) {
         final GameController game = loadedGame(

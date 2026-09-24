@@ -134,9 +134,10 @@ class SlotMachine {
   /// is paid whichever way is worth more: as wilds in their own right, or as
   /// the symbol they stand in for. Scatters never carry a line.
   ///
-  /// Public and static because `tool/exact_rtp.dart` scores lines with it, so
-  /// the published return-to-player is computed by the code that actually pays
-  /// the player rather than by a second implementation that could drift.
+  /// Public and static because the exact return-to-player calculation in
+  /// `rtp.dart` scores lines with it, so the published figure comes from the
+  /// code that actually pays the player rather than from a second
+  /// implementation that could drift away from it.
   static LineWin? scoreLine({
     required List<GameSymbol> onLine,
     required int betPerLine,

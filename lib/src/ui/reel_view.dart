@@ -95,7 +95,11 @@ class _ReelViewState extends State<ReelView>
 
   void _startSpin() {
     final int bandLength = widget.band.length;
-    final double from = _restPosition;
+    // Pick up from wherever the band actually is, so a spin starting before the
+    // last one settled carries on smoothly instead of jumping.
+    final double from = _controller.isAnimating
+        ? _position.value
+        : _restPosition;
 
     // Counting down lands on the target once the whole turns are stripped off.
     final double stepsToTarget = (from - widget.stop) % bandLength;
@@ -133,7 +137,10 @@ class _ReelViewState extends State<ReelView>
     _positionCurve = curve;
     _position = curve.animate(_controller);
 
-    _restPosition = to;
+    // Positions only ever count down, so keep the resting value inside one band
+    // rather than letting it drift towards the limits of a double. Wrapping is
+    // invisible because rendering already reads the position modulo the band.
+    _restPosition = to % bandLength;
     _controller.forward();
   }
 
@@ -155,7 +162,12 @@ class _ReelViewState extends State<ReelView>
         width: cell,
         height: height,
         child: AnimatedBuilder(
-          animation: Listenable.merge(<Listenable>[_position, widget.pulse]),
+          // Only follow the win pulse when this reel has something to
+          // highlight; otherwise a settled reel would rebuild every frame for
+          // the life of the app.
+          animation: widget.highlightedRows.isEmpty
+              ? _position
+              : Listenable.merge(<Listenable>[_position, widget.pulse]),
           builder: (BuildContext context, Widget? child) {
             final double position = _position.value;
             final int base = position.floor();
