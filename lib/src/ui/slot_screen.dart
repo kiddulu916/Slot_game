@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../engine/paytable.dart';
 import '../engine/reel_strips.dart';
 import '../engine/spin_result.dart';
+import '../game/audio_service.dart';
 import '../game/game_controller.dart';
+import '../game/game_sound.dart';
+import '../game/spin_timing.dart';
 import 'app_theme.dart';
 import 'controls_bar.dart';
 import 'payline_overlay.dart';
@@ -15,9 +20,10 @@ import 'win_banner.dart';
 
 /// The machine itself: display strip, reels and controls.
 class SlotScreen extends StatefulWidget {
-  const SlotScreen({required this.game, super.key});
+  const SlotScreen({required this.game, required this.audio, super.key});
 
   final GameController game;
+  final AudioService audio;
 
   @override
   State<SlotScreen> createState() => _SlotScreenState();
@@ -35,11 +41,27 @@ class _SlotScreenState extends State<SlotScreen>
   );
 
   int _lastCelebratedSpin = -1;
+  Timer? _creditTicker;
 
   @override
   void initState() {
     super.initState();
     widget.game.addListener(_onGameChanged);
+  }
+
+  /// Ticks a coin sound while the credit counter rolls up a win.
+  void _startCreditTicks() {
+    _creditTicker?.cancel();
+    const Duration interval = Duration(milliseconds: 90);
+    int remaining =
+        SpinTiming.winCountUp.inMilliseconds ~/ interval.inMilliseconds;
+    _creditTicker = Timer.periodic(interval, (Timer timer) {
+      if (!mounted || remaining-- <= 0) {
+        timer.cancel();
+        return;
+      }
+      widget.audio.play(GameSound.creditTick);
+    });
   }
 
   /// Runs the win pulse and fires the haptic once per spin, as the reels rest.
@@ -62,15 +84,25 @@ class _SlotScreenState extends State<SlotScreen>
       return;
     }
     _lastCelebratedSpin = game.spinsPlayed;
-    if (WinTier.of(result).isCelebrated) {
+
+    final WinTier tier = WinTier.of(result);
+    if (tier.isCelebrated) {
       HapticFeedback.heavyImpact();
     } else {
       HapticFeedback.lightImpact();
+    }
+    widget.audio.play(tier.sound);
+    _startCreditTicks();
+
+    // The bonus gets its own flourish on top of the win it came with.
+    if (result.freeSpinsAwarded > 0) {
+      widget.audio.play(GameSound.bonus);
     }
   }
 
   @override
   void dispose() {
+    _creditTicker?.cancel();
     widget.game.removeListener(_onGameChanged);
     _pulse.dispose();
     super.dispose();
@@ -89,18 +121,24 @@ class _SlotScreenState extends State<SlotScreen>
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: <Widget>[
-                  _Header(game: game),
+                  _Header(game: game, audio: widget.audio),
                   const SizedBox(height: 10),
                   _DisplayStrip(game: game),
                   const SizedBox(height: 12),
                   Expanded(
                     child: Center(
-                      child: _ReelPanel(game: game, pulse: _pulse),
+                      child: _ReelPanel(
+                        game: game,
+                        pulse: _pulse,
+                        onReelSettled: () =>
+                            widget.audio.play(GameSound.reelStop),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 14),
                   ControlsBar(
                     game: game,
+                    audio: widget.audio,
                     onShowPaytable: () => PaytableSheet.show(
                       context,
                       betPerLine: game.betPerLine,
@@ -118,9 +156,10 @@ class _SlotScreenState extends State<SlotScreen>
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.game});
+  const _Header({required this.game, required this.audio});
 
   final GameController game;
+  final AudioService audio;
 
   @override
   Widget build(BuildContext context) {
@@ -148,6 +187,20 @@ class _Header extends StatelessWidget {
               style: AppTheme.label,
             ),
           ),
+        // Sits up here rather than in the controls, which are already full.
+        ListenableBuilder(
+          listenable: audio,
+          builder: (BuildContext context, Widget? child) => IconButton(
+            onPressed: () => audio.setMuted(!audio.muted),
+            visualDensity: VisualDensity.compact,
+            tooltip: audio.muted ? 'Unmute' : 'Mute',
+            icon: Icon(
+              audio.muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+              size: 20,
+              color: audio.muted ? AppTheme.textDim : AppTheme.gold,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -213,10 +266,17 @@ class _DisplayStrip extends StatelessWidget {
 
 /// The gold-framed window the reels turn behind.
 class _ReelPanel extends StatelessWidget {
-  const _ReelPanel({required this.game, required this.pulse});
+  const _ReelPanel({
+    required this.game,
+    required this.pulse,
+    required this.onReelSettled,
+  });
 
   final GameController game;
   final Animation<double> pulse;
+
+  /// Fired as each reel comes to rest, once per reel.
+  final VoidCallback onReelSettled;
 
   static const double _reelGap = 5;
   static const double _framePadding = 9;
@@ -282,6 +342,7 @@ class _ReelPanel extends StatelessWidget {
                               ? _winningRowsOn(result!, reel)
                               : const <int>{},
                           pulse: pulse,
+                          onSettled: onReelSettled,
                         ),
                       ],
                     ],

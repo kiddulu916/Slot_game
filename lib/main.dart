@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'src/game/audio_service.dart';
 import 'src/game/game_controller.dart';
 import 'src/game/wallet.dart';
 import 'src/ui/app_theme.dart';
@@ -34,17 +35,21 @@ class SlotGameApp extends StatefulWidget {
 
 class _SlotGameAppState extends State<SlotGameApp> {
   late final GameController _game = GameController(wallet: PreferencesWallet());
+  late final AudioService _audio = PlayerAudioService();
 
   @override
   void initState() {
     super.initState();
-    // Reads the saved balance; the machine is playable either way.
+    // Both are best effort: the machine is playable before either resolves, and
+    // stays playable if audio is unavailable entirely.
     _game.load();
+    _audio.load();
   }
 
   @override
   void dispose() {
     _game.dispose();
+    _audio.dispose();
     super.dispose();
   }
 
@@ -54,7 +59,9 @@ class _SlotGameAppState extends State<SlotGameApp> {
       title: 'Lucky Five',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.build(),
-      home: Scaffold(body: SlotScreen(game: _game)),
+      home: Scaffold(
+        body: SlotScreen(game: _game, audio: _audio),
+      ),
     );
   }
 }

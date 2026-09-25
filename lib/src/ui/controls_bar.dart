@@ -2,19 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../engine/paytable.dart';
+import '../game/audio_service.dart';
 import '../game/game_controller.dart';
+import '../game/game_sound.dart';
 import 'app_theme.dart';
 
 /// The bet ladder, the spin button and the toggles beside it.
 class ControlsBar extends StatelessWidget {
   const ControlsBar({
     required this.game,
+    required this.audio,
     required this.onShowPaytable,
     super.key,
   });
 
   final GameController game;
+  final AudioService audio;
   final VoidCallback onShowPaytable;
+
+  /// Wraps a control's action so every press clicks.
+  VoidCallback _tapped(VoidCallback action) => () {
+    audio.play(GameSound.uiTap);
+    action();
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -29,13 +39,13 @@ class ControlsBar extends StatelessWidget {
             _IconToggle(
               icon: Icons.table_rows_rounded,
               label: 'Pays',
-              onPressed: onShowPaytable,
+              onPressed: _tapped(onShowPaytable),
             ),
             _IconToggle(
               icon: Icons.bolt_rounded,
               label: 'Turbo',
               active: game.turbo,
-              onPressed: () => game.setTurbo(!game.turbo),
+              onPressed: _tapped(() => game.setTurbo(!game.turbo)),
             ),
             _IconToggle(
               icon: game.autoplay
@@ -44,7 +54,7 @@ class ControlsBar extends StatelessWidget {
               label: game.autoplay ? 'Stop' : 'Auto',
               active: game.autoplay,
               onPressed: game.canSpin || game.autoplay
-                  ? game.toggleAutoplay
+                  ? _tapped(game.toggleAutoplay)
                   : null,
             ),
           ],
@@ -58,20 +68,20 @@ class ControlsBar extends StatelessWidget {
               icon: Icons.remove_rounded,
               onPressed: betLocked
                   ? null
-                  : () => game.changeBet(increase: false),
+                  : _tapped(() => game.changeBet(increase: false)),
             ),
-            _SpinButton(game: game),
+            _SpinButton(game: game, audio: audio),
             _BetStepper(
               icon: Icons.add_rounded,
               onPressed: betLocked
                   ? null
-                  : () => game.changeBet(increase: true),
+                  : _tapped(() => game.changeBet(increase: true)),
             ),
           ],
         ),
         const SizedBox(height: 10),
         TextButton(
-          onPressed: betLocked ? null : game.betMax,
+          onPressed: betLocked ? null : _tapped(game.betMax),
           style: TextButton.styleFrom(
             foregroundColor: AppTheme.gold,
             visualDensity: VisualDensity.compact,
@@ -91,9 +101,10 @@ class ControlsBar extends StatelessWidget {
 }
 
 class _SpinButton extends StatelessWidget {
-  const _SpinButton({required this.game});
+  const _SpinButton({required this.game, required this.audio});
 
   final GameController game;
+  final AudioService audio;
 
   @override
   Widget build(BuildContext context) {
@@ -118,8 +129,10 @@ class _SpinButton extends StatelessWidget {
             ? () {
                 HapticFeedback.mediumImpact();
                 if (broke) {
+                  audio.play(GameSound.uiTap);
                   game.topUp();
                 } else {
+                  audio.play(GameSound.spinStart);
                   game.spin();
                 }
               }

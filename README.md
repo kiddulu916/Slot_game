@@ -141,7 +141,7 @@ Needs the Flutter SDK and, for a device build, the Android SDK.
 
 ```bash
 flutter pub get
-flutter test                  # 77 tests
+flutter test                  # 91 tests
 flutter run                   # on a connected device or emulator
 flutter build apk --release   # installable APK
 ```
@@ -172,6 +172,8 @@ lib/
       game_controller.dart     Balance, stake, spin lifecycle, free spins
       wallet.dart              Persistence, with an in-memory double
       spin_timing.dart         Shared animation schedule
+      audio_service.dart       Sound playback, with a silent double
+      game_sound.dart          The clip for each event
     ui/
       slot_screen.dart         The cabinet
       reel_view.dart           One spinning reel
@@ -187,9 +189,14 @@ test/
   game/                        Controller, using fake timers
   ui/                          Widget tests for the screen
   support/                     Machines with known outcomes
+assets/
+  audio/                       Eight synthesised clips, ~212 KiB
 tool/
   exact_rtp.dart               Closed-form RTP
   rtp.dart                     Monte Carlo cross-check
+  generate_sounds.py           Writes assets/audio from scratch
+.github/workflows/
+  ci.yaml                      Format, analyse, test, build APK
 ```
 
 ## Where to change things
@@ -202,17 +209,75 @@ tool/
 | Reel speed and stagger | `game/spin_timing.dart` |
 | Symbol artwork | `ui/symbol_art.dart` |
 | Colours | `ui/app_theme.dart` |
+| A sound, or which clip plays when | `tool/generate_sounds.py`, `game/game_sound.dart` |
 
 After touching either of the first two, run `dart run tool/exact_rtp.dart` and
 `flutter test` — `test/engine/rtp_test.dart` deliberately fails if the return to
 player leaves its band, so an accidental economy change cannot slip through.
 
+## Sound
+
+The clips in `assets/audio` are **synthesised, not sourced** — `tool/generate_sounds.py`
+writes them from scratch:
+
+```bash
+python3 tool/generate_sounds.py
+```
+
+That keeps them original, free of licensing questions, and small: eight clips in
+about 212 KiB. Regeneration is deterministic, so retuning a sound means editing
+a number in that script and re-running it. Everything is built from three
+ingredients — inharmonic bells whose upper partials decay faster than the
+fundamental (which is what reads as metal rather than a sine tone), seeded noise
+for transients, and phase-accumulated sweeps.
+
+| Clip | When | Design |
+|---|---|---|
+| `spin_start` | The reels are let go | Rising sweep 150→760 Hz under a noise swell |
+| `reel_stop` | Each reel settles | 172 Hz thunk plus a hard noise transient |
+| `win_small` | Any win up to 8x stake | Two chimes, C6 → E6 |
+| `win_big` | 8x–100x | Four-note arpeggio, C6 E6 G6 C7 |
+| `win_jackpot` | 100x and above | Six-note climb landing on a ringing chord |
+| `bonus` | Free spins awarded | Pentatonic sparkle |
+| `credit_tick` | While a win counts up | 2380 Hz ping, every 90 ms |
+| `ui_tap` | Any button | 1180 Hz blip, 60 ms |
+
+Playback is **best effort by design**. A spin has already been paid for by the
+time a clip is asked for, so a missing asset, denied audio focus or busy output
+device is logged and ignored rather than allowed to interrupt the game. The mute
+toggle sits in the header and is remembered between launches.
+
+`AudioService` is an interface for one reason: tests have no audio platform.
+They inject `SilentAudioService`, which records what *would* have played — which
+is how the suite can assert that a losing spin plays no win clip, and that five
+reels stopping produce exactly five stop sounds.
+
+To swap the synthesised clips for recorded ones, drop files with the same names
+into `assets/audio`. Nothing else needs to change.
+
+## Continuous integration
+
+`.github/workflows/ci.yaml` runs on every pull request and every push to `main`:
+
+- `dart format --set-exit-if-changed`
+- `flutter analyze --fatal-infos`
+- `flutter test`
+- `dart run tool/exact_rtp.dart`, so a reviewer can see what a paytable change
+  did to the return to player without checking the branch out
+- a second job building a debug APK and uploading it as an artifact
+
+The Flutter version is pinned in the workflow so a new release cannot turn CI
+red on its own. The point of running the suite here is `test/engine/rtp_test.dart`:
+it fails if the return to player leaves the 88–97% band, which makes an
+accidental change to the game's economy a merge blocker rather than something
+noticed months later.
+
 ## Worth adding next
 
-- **Sound.** The largest single gap. Reel stops, win stings and a bonus fanfare
-  do more for feel than any visual effect. Add `audioplayers`, put clips in
-  `assets/audio/`, and trigger them where the haptics already fire.
-- **Artwork.** `symbol_art.dart` is the only file that needs to change.
+- **Artwork.** `ui/symbol_art.dart` is the only file that needs to change; the
+  symbols are currently emoji and type.
+- **Recorded audio.** The synthesised clips are deliberately plain. Real
+  recordings would drop straight in, as above.
 - **A server-side RNG**, if this ever became more than play money. The engine
   takes an injectable `Random`, so the seam is already there — and real-money
   gambling is licensed and regulated, which is a legal question long before it

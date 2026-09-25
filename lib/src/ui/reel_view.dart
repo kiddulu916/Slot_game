@@ -25,6 +25,7 @@ class ReelView extends StatefulWidget {
     required this.cellSize,
     required this.highlightedRows,
     required this.pulse,
+    this.onSettled,
     super.key,
   });
 
@@ -45,6 +46,9 @@ class ReelView extends StatefulWidget {
 
   /// Shared 0..1 pulse that makes every winning cell breathe in step.
   final Animation<double> pulse;
+
+  /// Called once as this reel comes to rest, for the reel-stop sound.
+  final VoidCallback? onSettled;
 
   @override
   State<ReelView> createState() => _ReelViewState();
@@ -141,7 +145,13 @@ class _ReelViewState extends State<ReelView>
     // rather than letting it drift towards the limits of a double. Wrapping is
     // invisible because rendering already reads the position modulo the band.
     _restPosition = to % bandLength;
-    _controller.forward();
+    _controller.forward().then((void _) {
+      // forward() also completes when the controller is stopped or disposed,
+      // so only a run that reached the end counts as settling.
+      if (mounted && _controller.value == 1) {
+        widget.onSettled?.call();
+      }
+    });
   }
 
   /// Blur that tracks how fast the band is moving, in band steps per second.

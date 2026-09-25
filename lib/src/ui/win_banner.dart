@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../engine/spin_result.dart';
+import '../game/game_sound.dart';
 import 'app_theme.dart';
 
 /// How loudly a win is celebrated.
@@ -9,18 +10,21 @@ import 'app_theme.dart';
 /// feels big at every bet level.
 enum WinTier {
   /// Below the stake: the reels paid, but the spin still lost money.
-  small(0, '', Colors.white),
-  nice(2, 'NICE WIN', AppTheme.mint),
-  big(8, 'BIG WIN', AppTheme.gold),
-  mega(25, 'MEGA WIN', AppTheme.violet),
-  jackpot(100, 'JACKPOT', AppTheme.crimson);
+  small(0, '', Colors.white, GameSound.winSmall),
+  nice(2, 'NICE WIN', AppTheme.mint, GameSound.winSmall),
+  big(8, 'BIG WIN', AppTheme.gold, GameSound.winBig),
+  mega(25, 'MEGA WIN', AppTheme.violet, GameSound.winBig),
+  jackpot(100, 'JACKPOT', AppTheme.crimson, GameSound.winJackpot);
 
-  const WinTier(this.minMultiple, this.title, this.colour);
+  const WinTier(this.minMultiple, this.title, this.colour, this.sound);
 
   /// Win-to-stake ratio this tier starts at.
   final int minMultiple;
   final String title;
   final Color colour;
+
+  /// The clip that plays when a win of this size lands.
+  final GameSound sound;
 
   static WinTier of(SpinResult result) {
     if (!result.isWin) {
