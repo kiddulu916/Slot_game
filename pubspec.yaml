@@ -1,0 +1,26 @@
+name: slot_game
+description: "A five-reel, ten-payline slot machine game for Android."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Persists the credit balance and chosen bet between launches.
+  shared_preferences: ^2.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+  # Lets the controller's spin timers be driven forward instantly in tests.
+  fake_async: ^1.3.1
+
+flutter:
+  uses-material-design: true
